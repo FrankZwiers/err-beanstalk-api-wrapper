@@ -181,7 +181,7 @@ class beanstalk(BotPlugin):
 			if user_id == None:
 				return "User '{0}' not found\n".format(args[1])	
 
-	@botcmd(split_args_with=' ')
+	@botcmd(split_args_with=None)
  	def beanstalk_create_repository(self, mess, args):
 		"""Err command that creates that calls the correct functions so the repository is created"""
 		labels = ['Name', 'Title', 'Label-color', 'Vcs']
