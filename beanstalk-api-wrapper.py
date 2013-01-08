@@ -48,7 +48,7 @@ class beanstalk(BotPlugin):
 				return repository
 
 	def _get_single_user_permissions(self, user_id):
-		return  [beanstalk_api.api.permission.find(user_id)]
+		return  beanstalk_api.api.permission.find(user_id)
 
 	def _get_all_permissions(self):
 		return_data = []
@@ -57,23 +57,30 @@ class beanstalk(BotPlugin):
 
 		return return_data
 
-	def _parse_permissions(self, raw_permissions):
+	def _parse_raw_permissions(self, raw_permissions):
+		return_data = ''
+		
+		for user_permissions in raw_permissions:
+			user_permissions = [user_permission['permission'] for user_permission in user_permissions]
+			return_data += self._parse_user_permissions(user_permissions)			
+
+		return return_data	
+
+	def _parse_user_permissions(self, user_permissions):
 		return_data = ''
 		repository = None
 		user = None
 
-		for user_permissions in raw_permissions:
-			for repository_permission in user_permissions[0]:
-				if repository == None or repository['id'] != repository_permission['permission']['repository_id']:
-					repository = self._get_repository_object_by_id(repository_permission['permission']['repository_id'])
-				
-				if user == None or user['id'] != repository_permission['permission']['user_id']:
-					user = self._get_user_object_by_id(repository_permission['permission']['user_id'])
-					user_full_name  = '{} {}'.format(user['first_name'], user['last_name'])
-					return_data += '\nUser: {}\n'.format(user_full_name)
-				return_data += 'Repository: {} | Permissions: Read {}, Write {}\n'.format(repository['name'], repository_permission['permission']['read'], repository_permission['permission']['write'])
-
-		return return_data		
+		for repository_user_permission in user_permissions:
+			if repository == None or repository['id'] != repository_user_permission['repository_id']:
+				repository = self._get_repository_object_by_id(repository_user_permission['repository_id'])
+			
+			if user == None or user['id'] != repository_user_permission['user_id']:
+				user = self._get_user_object_by_id(repository_user_permission['user_id'])
+				user_full_name  = '{} {}'.format(user['first_name'], user['last_name'])
+				return_data += '\nUser: {}\n'.format(user_full_name)
+			return_data += 'Repository: {} | Permissions: Read {}, Write {}\n'.format(repository['name'], repository_user_permission['read'], repository_user_permission['write'])
+		return return_data			
 
 	def _get_all_users(self):
 		"""Get all users from beanstalk and save them in self.users"""
@@ -82,25 +89,23 @@ class beanstalk(BotPlugin):
 
 	def _get_all_repositories(self):
 		"""Get all repositories from beanstalk and save them in self.repositories"""
-                repositories = beanstalk_api.api.repository.find()
-                self.repositories = [repository['repository'] for repository in repositories]
+		repositories = beanstalk_api.api.repository.find()
+		self.repositories = [repository['repository'] for repository in repositories]
 	
 	def _prepare(self):
 		"""This function connects to beanstalk and updates the users and repositories"""
 		"""Should be called everytime err receives a beanstalk command"""
 		self._connect_to_beanstalk()
-                self._get_all_users()
+		self._get_all_users()
 		self._get_all_repositories()
 
 	def _create_repository(self, name, title, vcs='git', label_color='label-white'):
 		"""Perform create repository api call"""
-		#beanstalk_api.api.repository.create(name, title, label_color, vcs)
-		pass
+		beanstalk_api.api.repository.create(name, title, label_color, vcs)
 
 	def _beanstalk_repository_set_permissions(self, repository_id, user_id):
 		"""Perform create permissions api call"""
-		#beanstalk_api.api.permission.create(user_id, repository, true, true, server_environment=None)
-		pass
+		beanstalk_api.api.permission.create(user_id, repository, true, true, server_environment=None)
 
 	def _get_user_id(self, login):
 		"""Return the user id corresponding to the specified login name"""
@@ -126,8 +131,8 @@ class beanstalk(BotPlugin):
 		"""Returns all data about the user that was specified by the users login name"""
 		userdata = ''
 		for k,v in user.iteritems():
-                	if k != 'first_name' and k != 'last_name':
-                        	userdata += "{0} : {1}\n".format(k, v)
+			if k != 'first_name' and k != 'last_name':
+				userdata += "{0} : {1}\n".format(k, v)
 		return userdata
 
 	def _is_valid_label_color(self, color):
@@ -175,14 +180,13 @@ class beanstalk(BotPlugin):
 		if repository_id != None and user_id != None and not (args[1] in self.config['EXCLUDE_USERS']):
 			self._beanstalk_repository_set_permissions(repository_id, user_id)
 			return "Set permissions for user: {0}({1})\n".format(args[1], user_id)
-		else:
-			if repository_id == None:
-				return "Repository '{0}' not found\n".format(args[0])
-			if user_id == None:
-				return "User '{0}' not found\n".format(args[1])	
+		elif repository_id == None:
+			return "Repository '{0}' not found\n".format(args[0])
+		elif user_id == None:
+			return "User '{0}' not found\n".format(args[1])	
 
 	@botcmd(split_args_with=None)
- 	def beanstalk_create_repository(self, mess, args):
+	def beanstalk_create_repository(self, mess, args):
 		"""Err command that creates that calls the correct functions so the repository is created"""
 		labels = ['Name', 'Title', 'Label-color', 'Vcs']
 		args_len = len(args)
@@ -214,15 +218,15 @@ class beanstalk(BotPlugin):
 
 		return return_data
 
-        @botcmd
-        def beanstalk_list_repositories(self, mess, args):
+	@botcmd
+	def beanstalk_list_repositories(self, mess, args):
 		"""Err command that outputs a list of repositories"""
-                self._prepare()
+		self._prepare()
 		return_data = "\n"
 
-                for repository in self.repositories:
+		for repository in self.repositories:
 			repositorydata = self._beanstalk_return_repositorydata(repository)
-                        return_data += "{0[title]}\n{1}\n".format(repository, repositorydata)
+			return_data += "{0[title]}\n{1}\n".format(repository, repositorydata)
 
 		return return_data
 
@@ -279,8 +283,8 @@ class beanstalk(BotPlugin):
 		if num_args == 1:
 			user_id = self._get_user_id(args[0])
 			if user_id != None:
-				return self._parse_permissions([self._get_single_user_permissions(user_id)])
+				return self._parse_raw_permissions([self._get_single_user_permissions(user_id)])
 			else:
 				return 'The user {} doesn\'t exist'.format(args[0])
 
-		return self._parse_permissions(self._get_all_permissions())
+		return self._parse_raw_permissions(self._get_all_permissions())
