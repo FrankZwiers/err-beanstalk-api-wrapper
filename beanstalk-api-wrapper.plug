@@ -1,0 +1,6 @@
+[Core]
+Name = beanstalk
+Module = beanstalk-api-wrapper
+    
+[Documentation]
+Description = A err wrapper for the Beanstalk API Python wrapper!
