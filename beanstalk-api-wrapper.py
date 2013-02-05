@@ -102,13 +102,12 @@ class beanstalk(BotPlugin):
 
 	def _create_repository(self, name, title, vcs='git', label_color='label-white'):
 		"""Perform create repository api call"""
-		#beanstalk_api.api.repository.create(name, title, label_color, vcs)
-		pass
+		beanstalk_api.api.repository.create(name, title, label_color, vcs)
 
 	def _beanstalk_repository_set_permissions(self, repository_id, user_id):
 		"""Perform create permissions api call"""
-		#beanstalk_api.api.permission.create(user_id, repository, true, true, server_environment=None)
-		pass
+		beanstalk_api.api.permission.create(user_id, repository, true, true, server_environment=None)
+		
 
 	def _get_user_id(self, login):
 		"""Return the user id corresponding to the specified login name"""
