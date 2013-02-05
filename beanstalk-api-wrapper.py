@@ -48,25 +48,26 @@ class beanstalk(BotPlugin):
 				return repository
 
 	def _get_single_user_permissions(self, user_id):
+		"""Performs the api call to get the permissions for a single user"""
 		return  beanstalk_api.api.permission.find(user_id)
 
 	def _get_all_permissions(self):
+		"""Loops the users and calls the function that performs the api call for each user"""
 		return_data = []
 		for user in self.users:
 			return_data.append(self._get_single_user_permissions(user['id']))
 
 		return return_data
 
-	def _parse_raw_permissions(self, raw_permissions):
-		return_data = ''
+	def _print_permissions(self, mess, raw_permissions):
+		"""Calls the functions that parses the permissions per user and returns a readable string"""
 		
 		for user_permissions in raw_permissions:
 			user_permissions = [user_permission['permission'] for user_permission in user_permissions]
-			return_data += self._parse_user_permissions(user_permissions)			
-
-		return return_data	
+			self.send(mess.getFrom(), self._parse_user_permissions(user_permissions), message_type=mess.getType())
 
 	def _parse_user_permissions(self, user_permissions):
+		"""Parses the permissions for a single user to a readable string"""
 		return_data = ''
 		repository = None
 		user = None
@@ -101,11 +102,13 @@ class beanstalk(BotPlugin):
 
 	def _create_repository(self, name, title, vcs='git', label_color='label-white'):
 		"""Perform create repository api call"""
-		beanstalk_api.api.repository.create(name, title, label_color, vcs)
+		#beanstalk_api.api.repository.create(name, title, label_color, vcs)
+		pass
 
 	def _beanstalk_repository_set_permissions(self, repository_id, user_id):
 		"""Perform create permissions api call"""
-		beanstalk_api.api.permission.create(user_id, repository, true, true, server_environment=None)
+		#beanstalk_api.api.permission.create(user_id, repository, true, true, server_environment=None)
+		pass
 
 	def _get_user_id(self, login):
 		"""Return the user id corresponding to the specified login name"""
@@ -283,8 +286,7 @@ class beanstalk(BotPlugin):
 		if num_args == 1:
 			user_id = self._get_user_id(args[0])
 			if user_id != None:
-				return self._parse_raw_permissions([self._get_single_user_permissions(user_id)])
+				self._print_permissions(mess, [self._get_single_user_permissions(user_id)])
 			else:
 				return 'The user {} doesn\'t exist'.format(args[0])
-
-		return self._parse_raw_permissions(self._get_all_permissions())
+		self._print_permissions(mess, self._get_all_permissions())
