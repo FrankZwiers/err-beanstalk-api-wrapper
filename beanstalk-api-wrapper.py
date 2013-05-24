@@ -124,7 +124,7 @@ class beanstalk(BotPlugin):
 	def _beanstalk_return_repositorydata(self, repository):
 		"""Returns all data about the repository that was specified by the repository name"""
 		repositorydata = ''
-		for k,v in repository.iteritems():
+		for k,v in repository.items():
 			if k != 'title':
 				repositorydata += "{0} : {1}\n".format(k, v)
 		return repositorydata
@@ -132,7 +132,7 @@ class beanstalk(BotPlugin):
 	def _beanstalk_return_userdata(self, user):
 		"""Returns all data about the user that was specified by the users login name"""
 		userdata = ''
-		for k,v in user.iteritems():
+		for k,v in user.items():
 			if k != 'first_name' and k != 'last_name':
 				userdata += "{0} : {1}\n".format(k, v)
 		return userdata
